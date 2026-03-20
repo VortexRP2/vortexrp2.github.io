@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orlando Show Tracker</title>
+    <title>MCParks Show Tracker</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -37,7 +37,6 @@
             margin: 40px auto;
         }
 
-        /* Left Side: Hero Tracker */
         .hero-panel {
             flex: 1;
             min-width: 350px;
@@ -105,7 +104,6 @@
             margin-bottom: 20px;
         }
 
-        /* Announcements */
         .announcement {
             display: none;
             font-size: 1.2rem;
@@ -129,7 +127,6 @@
             animation: pulse 2s infinite;
         }
 
-        /* Right Side: Leaderboard */
         .schedule-panel {
             flex: 1;
             min-width: 350px;
@@ -193,7 +190,6 @@
             text-align: right;
         }
 
-        /* --- Debug Menu Styles --- */
         .debug-btn {
             position: fixed;
             bottom: 20px;
@@ -224,7 +220,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             z-index: 100;
-            display: none; /* Hidden by default */
+            display: none; 
             flex-direction: column;
             gap: 15px;
             width: 250px;
@@ -266,7 +262,6 @@
             color: white;
         }
 
-        /* Animations */
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.02); opacity: 0.8; }
@@ -290,29 +285,22 @@
 <body>
 
     <div class="dashboard">
-        <!-- Main Tracker Panel -->
         <div class="hero-panel" id="hero-panel">
             <div class="location-header" id="location-header">Orlando (Eastern Time)</div>
             <div class="big-clock" id="clock">00:00:00</div>
-            
             <div class="badge" id="main-badge">Loading...</div>
             <div class="show-name" id="main-title">Searching Schedule</div>
             <div class="big-timer" id="main-timer">--:--:--</div>
-            
             <div class="announcement" id="announcement"></div>
             <div class="warp-command" id="warp-command">/warp unknown</div>
         </div>
-
-        <!-- Leaderboard Schedule Panel -->
         <div class="schedule-panel">
             <div class="schedule-header">Upcoming Shows</div>
             <div class="schedule-list" id="schedule-list">
-                <!-- Javascript will populate this -->
             </div>
         </div>
     </div>
 
-    <!-- Debug Menu -->
     <button class="debug-btn" onclick="toggleDebug()">⚙️</button>
     <div class="debug-panel" id="debug-panel">
         <h3>Time Travel Tester</h3>
@@ -324,7 +312,6 @@
     </div>
 
     <script>
-        // Set individual show durations here (Mins and Secs)
         const SHOWS = {
             E: { name: "Epcot Forever", code: "E", warp: "/warp ef", durMins: 20, durSecs: 0 },
             R: { name: "Remember Dreams Come True", code: "R", warp: "/warp RDCT", durMins: 20, durSecs: 0 },
@@ -350,7 +337,7 @@
 
         // --- DEBUG STATE ---
         let isDebugMode = false;
-        let debugTimeOffset = 0; // The difference between real time and fake time in milliseconds
+        let debugTimeOffset = 0;
 
         function toggleDebug() {
             document.getElementById("debug-panel").classList.toggle("active");
@@ -359,24 +346,15 @@
         function applyDebugTime() {
             let inputVal = document.getElementById("debug-time-input").value;
             if (!inputVal) return;
-
-            // Get the exact raw time the user asked for
             let targetFakeTime = new Date(inputVal).getTime();
-            
-            // Get what the current Orlando time actually is right now
             let realOrlandoStr = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
             let realOrlandoTime = new Date(realOrlandoStr).getTime();
-
-            // Calculate the gap so we can keep the clock ticking forward from the fake time
             debugTimeOffset = targetFakeTime - realOrlandoTime;
             isDebugMode = true;
-
-            // UI Changes to warn user
             let header = document.getElementById("location-header");
             header.innerText = "⚠️ ORLANDO (DEBUG TIME ACTIVE) ⚠️";
             header.className = "location-header debug-warning";
-            
-            updateDashboard(); // Force immediate update
+            updateDashboard();
         }
 
         function resetRealTime() {
@@ -391,7 +369,6 @@
             updateDashboard();
         }
 
-        // --- CORE LOGIC ---
         function getOrlandoTime() {
             let orlandoStr = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
             let realTime = new Date(orlandoStr);
@@ -448,16 +425,12 @@
 
         function updateDashboard() {
             let now = getOrlandoTime();
-
-            // Update Big Clock
             let sec = String(now.getSeconds()).padStart(2, '0');
             document.getElementById("clock").innerHTML = `${formatTime12Hr(now).split(' ')[0]}<span style="font-size: 2.5rem; color: #888;">:${sec} ${formatTime12Hr(now).split(' ')[1]}</span>`;
 
             let schedule = getUpcomingShows(now);
             let activeIndex = schedule.findIndex(s => now < s.endTime);
             let currentTarget = schedule[activeIndex];
-
-            // 1. Update Hero Panel
             let heroEl = document.getElementById("hero-panel");
             let badgeEl = document.getElementById("main-badge");
             let titleEl = document.getElementById("main-title");
@@ -476,18 +449,15 @@
             let timeToStart = currentTarget.startTime - now;
             
             if (now >= currentTarget.startTime && now < currentTarget.endTime) {
-                // IN PROGRESS
                 badgeEl.innerText = "In Progress";
                 timerEl.innerText = formatCountdown(currentTarget.endTime - now);
                 warpEl.innerText = currentTarget.info.warp;
                 warpEl.style.display = "block";
                 announcementEl.style.display = "none";
             } else {
-                // UPCOMING
                 badgeEl.innerText = "Starts In";
                 timerEl.innerText = formatCountdown(timeToStart);
                 
-                // Timeline logic
                 if (timeToStart <= 300000 && timeToStart > 0) {
                     announcementEl.innerText = "📣 5-Minute Warning Announced!";
                     announcementEl.style.display = "block";
@@ -503,7 +473,6 @@
                 }
             }
 
-            // 2. Update Leaderboard
             let leaderboardHtml = "";
             let upcomingList = schedule.slice(activeIndex, activeIndex + 6);
             
@@ -531,8 +500,6 @@
 
             document.getElementById("schedule-list").innerHTML = leaderboardHtml;
         }
-
-        // Initialize and tick
         updateDashboard();
         setInterval(updateDashboard, 1000);
 
